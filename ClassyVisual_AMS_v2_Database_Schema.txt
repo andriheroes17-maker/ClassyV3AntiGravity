@@ -1,0 +1,1444 @@
+title ClassyV Database Scheme V3
+content_types [icon: image, color: green] {
+  id int pk
+  name string
+  display_name string
+  icon string
+  is_active boolean
+  sort_order int
+}
+
+platforms [icon: share-2, color: green] {
+  id int pk
+  name string
+  display_name string
+  icon_url string
+  is_active boolean
+  sort_order int
+}
+
+departments [icon: briefcase, color: blue] {
+  id int pk
+  name string
+  head_user_id int fk
+  created_at datetime
+}
+
+national_holidays [icon: calendar, color: teal] {
+  id int pk
+  name string
+  date date
+  year int
+}
+
+company_settings [icon: settings, color: blue] {
+  id int pk
+  company_name string
+  address text
+  phone string
+  email string
+  website string
+  npwp string
+  pkp_number string
+  logo_url string
+  brand_color_primary string
+  brand_color_secondary string
+  fiscal_year_start_month int
+  default_work_start time
+  default_work_end time
+  work_days json
+  currency string
+  invoice_prefix string
+  offering_prefix string
+  document_footer text
+  updated_by int fk
+  updated_at datetime
+}
+
+user_preferences [icon: sliders, color: blue] {
+  id int pk
+  user_id int fk
+  language string
+  theme string
+  timezone string
+  date_format string
+  number_format string
+  default_role_id int fk
+  updated_at datetime
+}
+
+document_templates [icon: file-text, color: blue] {
+  id int pk
+  type string
+  name string
+  content_html text
+  is_default boolean
+  created_by int fk
+  updated_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+system_configs [icon: tool, color: blue] {
+  id int pk
+  config_key string
+  config_value string
+  data_type string
+  category string
+  description string
+  updated_by int fk
+  updated_at datetime
+}
+
+integration_configs [icon: link, color: blue] {
+  id int pk
+  service string
+  status string
+  api_key_encrypted string
+  webhook_url string
+  config_json json
+  last_synced_at datetime
+  last_error text
+  updated_by int fk
+  updated_at datetime
+}
+
+security_policies [icon: shield, color: blue] {
+  id int pk
+  policy_key string
+  policy_value string
+  updated_by int fk
+  updated_at datetime
+}
+
+users [icon: user, color: blue] {
+  id int pk
+  name string
+  email string
+  password_hash string
+  phone string
+  avatar_url string
+  job_title string
+  department_id int fk
+  employee_type string
+  user_type string
+  client_id int fk
+  is_active boolean
+  status string
+  joined_at date
+  last_login_at datetime
+  created_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+roles [icon: shield, color: blue] {
+  id int pk
+  name string
+  display_name string
+  description string
+  is_system_role boolean
+  is_custom boolean
+  parent_role_id int fk
+  created_by int fk
+  created_at datetime
+}
+
+permissions [icon: lock, color: blue] {
+  id int pk
+  module string
+  action string
+  description string
+}
+
+role_permissions [icon: link, color: blue] {
+  role_id int fk
+  permission_id int fk
+}
+
+user_roles [icon: users, color: blue] {
+  user_id int fk
+  role_id int fk
+  assigned_by int fk
+  assigned_at datetime
+}
+
+temporary_access_grants [icon: clock, color: blue] {
+  id int pk
+  user_id int fk
+  module string
+  access_level string
+  granted_by int fk
+  start_date datetime
+  end_date datetime
+  is_active boolean
+  revoked_at datetime
+  note text
+  created_at datetime
+}
+
+user_2fa [icon: smartphone, color: blue] {
+  id int pk
+  user_id int fk
+  totp_secret string
+  is_enabled boolean
+  backup_codes json
+  last_used_at datetime
+  created_at datetime
+}
+
+user_sessions [icon: monitor, color: blue] {
+  id int pk
+  user_id int fk
+  token_hash string
+  device_info string
+  ip_address string
+  is_trusted boolean
+  expires_at datetime
+  created_at datetime
+}
+
+audit_logs [icon: file-text, color: blue] {
+  id int pk
+  user_id int fk
+  action string
+  module string
+  entity_type string
+  entity_id int
+  before_data json
+  after_data json
+  ip_address string
+  user_agent string
+  created_at datetime
+}
+
+dashboard_widget_layouts [icon: layout, color: red] {
+  id int pk
+  user_id int fk
+  widget_key string
+  position_x int
+  position_y int
+  width int
+  height int
+  is_visible boolean
+  updated_at datetime
+}
+
+clients [icon: building, color: green] {
+  id int pk
+  company_name string
+  industry string
+  pic_name string
+  pic_title string
+  pic_phone string
+  pic_email string
+  address text
+  website string
+  service_type string
+  contract_start_date date
+  contract_end_date date
+  contract_value decimal
+  internal_pic_id int fk
+  status string
+  total_revenue decimal
+  notes text
+  created_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+client_documents [icon: file, color: green] {
+  id int pk
+  client_id int fk
+  file_name string
+  file_url string
+  doc_type string
+  uploaded_by int fk
+  created_at datetime
+}
+
+client_notes [icon: edit-3, color: green] {
+  id int pk
+  client_id int fk
+  content text
+  note_type string
+  created_by int fk
+  created_at datetime
+}
+
+projects [icon: folder, color: green] {
+  id int pk
+  client_id int fk
+  name string
+  description text
+  project_type string
+  status string
+  progress_percent decimal
+  budget_amount decimal
+  budget_spent decimal
+  scope_of_work text
+  pm_id int fk
+  start_date date
+  end_date date
+  from_offering_id int fk
+  from_template_id int fk
+  created_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+project_content_types [icon: tag, color: green] {
+  project_id int fk
+  content_type_id int fk
+}
+
+project_platforms [icon: share-2, color: green] {
+  project_id int fk
+  platform_id int fk
+}
+
+project_members [icon: users, color: green] {
+  project_id int fk
+  user_id int fk
+  role_in_project string
+  joined_at datetime
+}
+
+milestones [icon: flag, color: green] {
+  id int pk
+  project_id int fk
+  name string
+  description text
+  start_date date
+  due_date date
+  status string
+  created_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+project_templates [icon: copy, color: green] {
+  id int pk
+  name string
+  description string
+  template_type string
+  template_data json
+  created_by int fk
+  created_at datetime
+}
+
+kanban_columns [icon: columns, color: green] {
+  id int pk
+  project_id int fk
+  name string
+  order_index int
+  color string
+  is_done_col boolean
+  is_published_col boolean
+}
+
+tasks [icon: check-square, color: green] {
+  id int pk
+  project_id int fk
+  kanban_column_id int fk
+  parent_task_id int fk
+  title string
+  description text
+  content_type_id int fk
+  platform_id int fk
+  assignee_ids json
+  reporter_id int fk
+  priority string
+  due_date datetime
+  estimated_hours decimal
+  actual_hours decimal
+  revision_count int
+  is_visible_to_client boolean
+  labels json
+  created_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+task_subtasks [icon: list, color: green] {
+  id int pk
+  task_id int fk
+  title string
+  is_done boolean
+  sort_order int
+}
+
+task_status_history [icon: git-commit, color: green] {
+  id int pk
+  task_id int fk
+  from_kanban_column_id int fk
+  to_kanban_column_id int fk
+  moved_by int fk
+  moved_at datetime
+  note text
+}
+
+time_logs [icon: clock, color: green] {
+  id int pk
+  task_id int fk
+  user_id int fk
+  started_at datetime
+  ended_at datetime
+  duration_minutes int
+  note text
+  is_manual boolean
+  created_at datetime
+}
+
+file_attachments [icon: paperclip, color: green] {
+  id int pk
+  task_id int fk
+  project_id int fk
+  file_name string
+  file_url string
+  mime_type string
+  size_bytes int
+  version int
+  uploaded_by int fk
+  is_deleted boolean
+  deleted_at datetime
+  created_at datetime
+}
+
+comments [icon: message-square, color: green] {
+  id int pk
+  task_id int fk
+  parent_comment_id int fk
+  user_id int fk
+  content text
+  is_resolved boolean
+  created_at datetime
+  updated_at datetime
+}
+
+comment_mentions [icon: at-sign, color: green] {
+  comment_id int fk
+  user_id int fk
+}
+
+content_items [icon: film, color: green] {
+  id int pk
+  project_id int fk
+  task_id int fk
+  title string
+  content_type_id int fk
+  platform_id int fk
+  planned_publish_date date
+  actual_publish_date date
+  status string
+  revision_count int
+  created_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+review_items [icon: eye, color: green] {
+  id int pk
+  task_id int fk
+  content_item_id int fk
+  version_number int
+  reviewer_id int fk
+  review_type string
+  status string
+  feedback_text text
+  deadline date
+  escalate_after_days int
+  submitted_at datetime
+  reviewed_at datetime
+  created_at datetime
+}
+
+review_annotations [icon: edit, color: green] {
+  id int pk
+  review_item_id int fk
+  user_id int fk
+  annotation_type string
+  position_x decimal
+  position_y decimal
+  timecode_sec int
+  comment text
+  created_at datetime
+}
+
+calendar_events [icon: calendar, color: teal] {
+  id int pk
+  title string
+  description text
+  event_type string
+  start_at datetime
+  end_at datetime
+  is_all_day boolean
+  location string
+  color string
+  source_module string
+  source_entity_id int
+  project_id int fk
+  created_by int fk
+  is_private boolean
+  google_event_id string
+  google_calendar_id string
+  created_at datetime
+  updated_at datetime
+}
+
+event_participants [icon: users, color: teal] {
+  event_id int fk
+  user_id int fk
+  status string
+}
+
+recurring_rules [icon: repeat, color: teal] {
+  id int pk
+  event_id int fk
+  rrule string
+  ends_at date
+  max_occurrences int
+}
+
+reminder_jobs [icon: bell, color: teal] {
+  id int pk
+  event_id int fk
+  user_id int fk
+  channel string
+  send_before string
+  scheduled_at datetime
+  sent_at datetime
+  status string
+  retry_count int
+  error_msg text
+}
+
+resources [icon: box, color: teal] {
+  id int pk
+  name string
+  category string
+  photo_url string
+  serial_number string
+  notes text
+  status string
+  is_active boolean
+  created_at datetime
+}
+
+resource_bookings [icon: calendar-check, color: teal] {
+  id int pk
+  resource_id int fk
+  event_id int fk
+  project_id int fk
+  booked_by int fk
+  start_at datetime
+  end_at datetime
+  purpose text
+  created_at datetime
+}
+
+income_categories [icon: tag, color: yellow] {
+  id int pk
+  name string
+}
+
+expense_categories [icon: tag, color: yellow] {
+  id int pk
+  name string
+  department_id int fk
+}
+
+offerings [icon: send, color: yellow] {
+  id int pk
+  offer_number string
+  client_id int fk
+  lead_id int fk
+  title string
+  service_description text
+  scope_of_work text
+  deliverables text
+  timeline_estimate string
+  terms_conditions text
+  validity_days int
+  status string
+  revision_number int
+  parent_offering_id int fk
+  subtotal decimal
+  discount_pct decimal
+  discount_amount decimal
+  total_amount decimal
+  sent_at datetime
+  viewed_at datetime
+  accepted_at datetime
+  declined_at datetime
+  decline_reason text
+  created_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+offering_items [icon: list, color: yellow] {
+  id int pk
+  offering_id int fk
+  description string
+  quantity decimal
+  unit_price decimal
+  amount decimal
+  sort_order int
+}
+
+invoices [icon: file-text, color: yellow] {
+  id int pk
+  invoice_number string
+  client_id int fk
+  project_id int fk
+  offering_id int fk
+  recurring_config_id int fk
+  issue_date date
+  due_date date
+  status string
+  subtotal decimal
+  discount_pct decimal
+  discount_amount decimal
+  ppn_enabled boolean
+  ppn_rate decimal
+  ppn_amount decimal
+  total_amount decimal
+  amount_paid decimal
+  notes text
+  payment_link_url string
+  sent_at datetime
+  paid_at datetime
+  created_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+invoice_items [icon: list, color: yellow] {
+  id int pk
+  invoice_id int fk
+  description string
+  quantity decimal
+  unit_price decimal
+  amount decimal
+  sort_order int
+}
+
+recurring_invoice_configs [icon: refresh-cw, color: yellow] {
+  id int pk
+  client_id int fk
+  project_id int fk
+  amount decimal
+  description text
+  billing_day int
+  ppn_enabled boolean
+  auto_send boolean
+  next_billing_date date
+  status string
+  template_id int fk
+  created_by int fk
+  created_at datetime
+}
+
+payment_transactions [icon: credit-card, color: yellow] {
+  id int pk
+  invoice_id int fk
+  gateway string
+  gateway_transaction_id string
+  amount decimal
+  payment_method string
+  status string
+  idempotency_key string
+  raw_response json
+  paid_at datetime
+  created_at datetime
+}
+
+income_records [icon: trending-up, color: yellow] {
+  id int pk
+  client_id int fk
+  project_id int fk
+  invoice_id int fk
+  category_id int fk
+  amount decimal
+  currency string
+  receipt_method string
+  receipt_url string
+  received_date date
+  note text
+  status string
+  created_by int fk
+  created_at datetime
+}
+
+expense_records [icon: trending-down, color: yellow] {
+  id int pk
+  project_id int fk
+  department_id int fk
+  category_id int fk
+  vendor_name string
+  amount decimal
+  currency string
+  expense_date date
+  description text
+  receipt_url string
+  pph23_rate decimal
+  pph23_amount decimal
+  payment_method string
+  status string
+  approved_by int fk
+  approved_at datetime
+  rejection_reason text
+  is_recurring boolean
+  created_by int fk
+  created_at datetime
+}
+
+tax_configs [icon: percent, color: yellow] {
+  id int pk
+  tax_type string
+  rate decimal
+  is_active boolean
+  effective_date date
+  notes text
+  updated_by int fk
+  updated_at datetime
+}
+
+tax_records [icon: file, color: yellow] {
+  id int pk
+  tax_type string
+  period_year int
+  period_month int
+  total_base decimal
+  total_tax decimal
+  status string
+  export_url string
+  created_at datetime
+}
+
+budget_plans [icon: bar-chart, color: yellow] {
+  id int pk
+  department_id int fk
+  period_type string
+  period_year int
+  period_month int
+  total_amount decimal
+  spent_actual decimal
+  carry_forward decimal
+  created_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+budget_items [icon: list, color: yellow] {
+  id int pk
+  budget_plan_id int fk
+  category_id int fk
+  amount decimal
+}
+
+salary_profiles [icon: dollar-sign, color: yellow] {
+  id int pk
+  user_id int fk
+  base_salary decimal
+  fixed_transport_allowance decimal
+  fixed_meal_allowance decimal
+  variable_allowance decimal
+  bpjs_kes_company_pct decimal
+  bpjs_kes_employee_pct decimal
+  bpjs_jht_company_pct decimal
+  bpjs_jht_employee_pct decimal
+  bpjs_jp_company_pct decimal
+  bpjs_jp_employee_pct decimal
+  bpjs_jkk_pct decimal
+  bpjs_jkm_pct decimal
+  pph21_method string
+  ptkp_status string
+  effective_date date
+  created_at datetime
+}
+
+payroll_runs [icon: briefcase, color: yellow] {
+  id int pk
+  period_year int
+  period_month int
+  status string
+  total_gross decimal
+  total_deductions decimal
+  total_net decimal
+  csv_export_url string
+  approved_by int fk
+  approved_at datetime
+  created_by int fk
+  created_at datetime
+}
+
+payroll_items [icon: list, color: yellow] {
+  id int pk
+  payroll_run_id int fk
+  user_id int fk
+  basic_salary decimal
+  transport_allowance decimal
+  meal_allowance decimal
+  variable_allowance decimal
+  overtime_hours decimal
+  overtime_rate decimal
+  overtime_amount decimal
+  bonus decimal
+  absence_deduction decimal
+  bpjs_kes_employee decimal
+  bpjs_jht_employee decimal
+  bpjs_jp_employee decimal
+  pph21 decimal
+  other_deductions decimal
+  net_salary decimal
+  slip_pdf_url string
+}
+
+financial_reports [icon: bar-chart-2, color: yellow] {
+  id int pk
+  report_type string
+  period_type string
+  period_year int
+  period_month int
+  total_income decimal
+  total_expense decimal
+  net_profit decimal
+  pdf_url string
+  excel_url string
+  generated_at datetime
+  sent_to_emails json
+}
+
+pipeline_stages [icon: columns, color: orange] {
+  id int pk
+  name string
+  display_name string
+  order_index int
+  color string
+  is_won boolean
+  is_lost boolean
+  stay_alert_days int
+}
+
+prospects [icon: user-plus, color: orange] {
+  id int pk
+  contact_name string
+  job_title string
+  company_name string
+  industry string
+  phone string
+  email string
+  linkedin_url string
+  lead_source string
+  deal_value decimal
+  assigned_to int fk
+  stage_id int fk
+  lead_score int
+  status string
+  follow_up_date date
+  utm_source string
+  utm_medium string
+  utm_campaign string
+  client_id int fk
+  notes text
+  created_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+prospect_activities [icon: activity, color: orange] {
+  id int pk
+  prospect_id int fk
+  user_id int fk
+  activity_type string
+  description text
+  activity_date datetime
+  created_at datetime
+}
+
+prospect_stage_history [icon: git-commit, color: orange] {
+  id int pk
+  prospect_id int fk
+  from_stage_id int fk
+  to_stage_id int fk
+  moved_by int fk
+  moved_at datetime
+  note text
+}
+
+lead_score_logs [icon: trending-up, color: orange] {
+  id int pk
+  prospect_id int fk
+  score int
+  reason string
+  created_at datetime
+}
+
+campaigns [icon: target, color: orange] {
+  id int pk
+  name string
+  platform string
+  budget decimal
+  spend_actual decimal
+  start_date date
+  end_date date
+  utm_campaign string
+  status string
+  total_leads int
+  cpl decimal
+  conversions int
+  conversion_rate decimal
+  revenue_attributed decimal
+  roas decimal
+  created_by int fk
+  created_at datetime
+}
+
+campaign_prospects [icon: link, color: orange] {
+  campaign_id int fk
+  prospect_id int fk
+  linked_via string
+  linked_at datetime
+}
+
+email_sequences [icon: mail, color: orange] {
+  id int pk
+  name string
+  trigger_type string
+  trigger_stage_id int fk
+  is_active boolean
+  total_steps int
+  description text
+  created_by int fk
+  created_at datetime
+}
+
+email_sequence_steps [icon: list, color: orange] {
+  id int pk
+  sequence_id int fk
+  step_order int
+  delay_hours int
+  subject string
+  subject_b string
+  body_html text
+  created_at datetime
+}
+
+email_send_logs [icon: send, color: orange] {
+  id int pk
+  prospect_id int fk
+  sequence_step_id int fk
+  from_email string
+  sent_at datetime
+  opened_at datetime
+  clicked_at datetime
+  replied_at datetime
+  bounced_at datetime
+  unsubscribed_at datetime
+  status string
+}
+
+social_media_accounts [icon: share-2, color: orange] {
+  id int pk
+  client_id int fk
+  platform_id int fk
+  account_name string
+  account_handle string
+  oauth_token_encrypted string
+  token_expires_at datetime
+  is_active boolean
+  created_at datetime
+}
+
+social_posts [icon: image, color: orange] {
+  id int pk
+  project_id int fk
+  content_item_id int fk
+  social_media_account_id int fk
+  platform_id int fk
+  content_type_id int fk
+  caption text
+  hashtags text
+  tag_location string
+  media_urls json
+  scheduled_at datetime
+  published_at datetime
+  status string
+  external_post_id string
+  error_message text
+  reach int
+  impressions int
+  likes int
+  comments_count int
+  shares int
+  created_by int fk
+  created_at datetime
+}
+
+digital_assets [icon: folder, color: purple] {
+  id int pk
+  client_id int fk
+  project_id int fk
+  name string
+  category string
+  file_url string
+  thumbnail_url string
+  mime_type string
+  size_bytes int
+  version int
+  tags json
+  is_deleted boolean
+  uploaded_by int fk
+  created_at datetime
+}
+
+sop_documents [icon: book, color: purple] {
+  id int pk
+  title string
+  content json
+  category string
+  department_id int fk
+  target_roles json
+  is_required_reading boolean
+  is_outdated boolean
+  created_by int fk
+  updated_by int fk
+  created_at datetime
+  updated_at datetime
+}
+
+sop_versions [icon: git-branch, color: purple] {
+  id int pk
+  document_id int fk
+  version_number int
+  content json
+  changelog text
+  created_by int fk
+  created_at datetime
+}
+
+sop_read_logs [icon: check-circle, color: purple] {
+  document_id int fk
+  user_id int fk
+  read_at datetime
+}
+
+work_shifts [icon: clock, color: pink] {
+  id int pk
+  user_id int fk
+  shift_name string
+  work_start time
+  work_end time
+  work_days json
+  effective_from date
+}
+
+attendance_records [icon: clock, color: pink] {
+  id int pk
+  user_id int fk
+  date date
+  check_in_at datetime
+  check_out_at datetime
+  check_in_method string
+  check_in_lat decimal
+  check_in_lng decimal
+  check_in_photo_url string
+  status string
+  late_minutes int
+  overtime_minutes int
+  shift_id int fk
+  hr_override boolean
+  override_by int fk
+  override_reason text
+  created_at datetime
+}
+
+leave_types [icon: calendar-x, color: pink] {
+  id int pk
+  name string
+  days_per_year int
+  requires_document boolean
+  is_paid boolean
+}
+
+leave_requests [icon: calendar-off, color: pink] {
+  id int pk
+  user_id int fk
+  leave_type_id int fk
+  start_date date
+  end_date date
+  total_days int
+  reason text
+  document_url string
+  status string
+  manager_id int fk
+  manager_approved_at datetime
+  hr_user_id int fk
+  hr_approved_at datetime
+  rejection_reason text
+  created_at datetime
+}
+
+leave_balances [icon: bar-chart-2, color: pink] {
+  id int pk
+  user_id int fk
+  leave_type_id int fk
+  year int
+  total_days int
+  used_days int
+  remaining_days int
+  carry_forward int
+  updated_at datetime
+}
+
+performance_reviews [icon: award, color: pink] {
+  id int pk
+  user_id int fk
+  reviewer_id int fk
+  period_type string
+  period_year int
+  period_month int
+  period_quarter int
+  self_score decimal
+  competency_score decimal
+  okr_achievement decimal
+  final_score decimal
+  qualitative_feedback text
+  status string
+  pdf_url string
+  created_at datetime
+  finalized_at datetime
+}
+
+okr_objectives [icon: target, color: pink] {
+  id int pk
+  user_id int fk
+  review_id int fk
+  objective string
+  weight_pct decimal
+  period_year int
+  period_quarter int
+  created_at datetime
+}
+
+okr_key_results [icon: check-circle, color: pink] {
+  id int pk
+  objective_id int fk
+  description string
+  target_value decimal
+  current_value decimal
+  unit string
+  last_updated_at datetime
+}
+
+competency_ratings [icon: star, color: pink] {
+  id int pk
+  review_id int fk
+  competency string
+  rating int
+  comment text
+}
+
+kpi_sdm_snapshots [icon: bar-chart, color: pink] {
+  id int pk
+  department_id int fk
+  period_year int
+  period_month int
+  headcount int
+  attendance_rate_pct decimal
+  avg_review_score decimal
+  okr_achievement_rate decimal
+  turnover_rate decimal
+  avg_overtime_hours decimal
+  leave_utilization_avg decimal
+  generated_at datetime
+}
+
+procurement_requests [icon: shopping-cart, color: pink] {
+  id int pk
+  requested_by int fk
+  item_name string
+  specification text
+  quantity int
+  estimated_price decimal
+  reason text
+  reference_url string
+  attachment_url string
+  status string
+  manager_approved_by int fk
+  coo_approved_by int fk
+  director_approved_by int fk
+  rejection_reason text
+  expense_id int fk
+  asset_id int fk
+  created_at datetime
+  updated_at datetime
+}
+
+asset_registers [icon: package, color: pink] {
+  id int pk
+  name string
+  category string
+  serial_number string
+  purchase_date date
+  purchase_price decimal
+  warranty_end_date date
+  location string
+  assigned_to int fk
+  status string
+  notes text
+  created_at datetime
+}
+
+notifications [icon: bell, color: gray] {
+  id int pk
+  user_id int fk
+  category string
+  type string
+  title string
+  body text
+  source_module string
+  source_entity_id int
+  link string
+  is_read boolean
+  created_at datetime
+}
+
+notification_email_logs [icon: mail, color: gray] {
+  id int pk
+  notification_id int fk
+  to_email string
+  subject string
+  template_id int fk
+  status string
+  sent_at datetime
+  retry_count int
+  error_msg text
+}
+
+notification_wa_logs [icon: phone, color: gray] {
+  id int pk
+  notification_id int fk
+  to_phone string
+  message_text text
+  status string
+  sent_at datetime
+  retry_count int
+  error_msg text
+}
+
+notification_preferences [icon: sliders, color: gray] {
+  id int pk
+  user_id int fk
+  notification_type string
+  channel_in_app boolean
+  channel_email boolean
+  channel_whatsapp boolean
+  digest_format string
+  dnd_start time
+  dnd_end time
+  updated_at datetime
+}
+
+company_settings.updated_by > users.id
+user_preferences.user_id > users.id
+user_preferences.default_role_id > roles.id
+document_templates.created_by > users.id
+document_templates.updated_by > users.id
+system_configs.updated_by > users.id
+integration_configs.updated_by > users.id
+security_policies.updated_by > users.id
+departments.head_user_id > users.id
+
+users.department_id > departments.id
+users.client_id > clients.id
+users.created_by > users.id
+roles.parent_role_id > roles.id
+roles.created_by > users.id
+role_permissions.role_id > roles.id
+role_permissions.permission_id > permissions.id
+user_roles.user_id > users.id
+user_roles.role_id > roles.id
+user_roles.assigned_by > users.id
+temporary_access_grants.user_id > users.id
+temporary_access_grants.granted_by > users.id
+user_2fa.user_id > users.id
+user_sessions.user_id > users.id
+audit_logs.user_id > users.id
+dashboard_widget_layouts.user_id > users.id
+
+clients.internal_pic_id > users.id
+clients.created_by > users.id
+client_documents.client_id > clients.id
+client_documents.uploaded_by > users.id
+client_notes.client_id > clients.id
+client_notes.created_by > users.id
+projects.client_id > clients.id
+projects.pm_id > users.id
+projects.from_offering_id > offerings.id
+projects.from_template_id > project_templates.id
+projects.created_by > users.id
+project_content_types.project_id > projects.id
+project_content_types.content_type_id > content_types.id
+project_platforms.project_id > projects.id
+project_platforms.platform_id > platforms.id
+project_members.project_id > projects.id
+project_members.user_id > users.id
+milestones.project_id > projects.id
+milestones.created_by > users.id
+project_templates.created_by > users.id
+kanban_columns.project_id > projects.id
+tasks.project_id > projects.id
+tasks.kanban_column_id > kanban_columns.id
+tasks.parent_task_id > tasks.id
+tasks.content_type_id > content_types.id
+tasks.platform_id > platforms.id
+tasks.reporter_id > users.id
+tasks.created_by > users.id
+task_subtasks.task_id > tasks.id
+task_status_history.task_id > tasks.id
+task_status_history.from_kanban_column_id > kanban_columns.id
+task_status_history.to_kanban_column_id > kanban_columns.id
+task_status_history.moved_by > users.id
+time_logs.task_id > tasks.id
+time_logs.user_id > users.id
+file_attachments.task_id > tasks.id
+file_attachments.project_id > projects.id
+file_attachments.uploaded_by > users.id
+comments.task_id > tasks.id
+comments.parent_comment_id > comments.id
+comments.user_id > users.id
+comment_mentions.comment_id > comments.id
+comment_mentions.user_id > users.id
+content_items.project_id > projects.id
+content_items.task_id > tasks.id
+content_items.content_type_id > content_types.id
+content_items.platform_id > platforms.id
+content_items.created_by > users.id
+review_items.task_id > tasks.id
+review_items.content_item_id > content_items.id
+review_items.reviewer_id > users.id
+review_annotations.review_item_id > review_items.id
+review_annotations.user_id > users.id
+
+calendar_events.project_id > projects.id
+calendar_events.created_by > users.id
+event_participants.event_id > calendar_events.id
+event_participants.user_id > users.id
+recurring_rules.event_id > calendar_events.id
+reminder_jobs.event_id > calendar_events.id
+reminder_jobs.user_id > users.id
+resource_bookings.resource_id > resources.id
+resource_bookings.event_id > calendar_events.id
+resource_bookings.project_id > projects.id
+resource_bookings.booked_by > users.id
+
+offerings.client_id > clients.id
+offerings.lead_id > prospects.id
+offerings.parent_offering_id > offerings.id
+offerings.created_by > users.id
+offering_items.offering_id > offerings.id
+invoices.client_id > clients.id
+invoices.project_id > projects.id
+invoices.offering_id > offerings.id
+invoices.recurring_config_id > recurring_invoice_configs.id
+invoices.created_by > users.id
+invoice_items.invoice_id > invoices.id
+recurring_invoice_configs.client_id > clients.id
+recurring_invoice_configs.project_id > projects.id
+recurring_invoice_configs.template_id > document_templates.id
+recurring_invoice_configs.created_by > users.id
+payment_transactions.invoice_id > invoices.id
+income_records.client_id > clients.id
+income_records.project_id > projects.id
+income_records.invoice_id > invoices.id
+income_records.category_id > income_categories.id
+income_records.created_by > users.id
+expense_records.project_id > projects.id
+expense_records.department_id > departments.id
+expense_records.category_id > expense_categories.id
+expense_records.approved_by > users.id
+expense_records.created_by > users.id
+expense_categories.department_id > departments.id
+tax_configs.updated_by > users.id
+budget_plans.department_id > departments.id
+budget_plans.created_by > users.id
+budget_items.budget_plan_id > budget_plans.id
+budget_items.category_id > expense_categories.id
+salary_profiles.user_id > users.id
+payroll_runs.approved_by > users.id
+payroll_runs.created_by > users.id
+payroll_items.payroll_run_id > payroll_runs.id
+payroll_items.user_id > users.id
+
+prospects.stage_id > pipeline_stages.id
+prospects.assigned_to > users.id
+prospects.client_id > clients.id
+prospects.created_by > users.id
+prospect_activities.prospect_id > prospects.id
+prospect_activities.user_id > users.id
+prospect_stage_history.prospect_id > prospects.id
+prospect_stage_history.from_stage_id > pipeline_stages.id
+prospect_stage_history.to_stage_id > pipeline_stages.id
+prospect_stage_history.moved_by > users.id
+lead_score_logs.prospect_id > prospects.id
+campaigns.created_by > users.id
+campaign_prospects.campaign_id > campaigns.id
+campaign_prospects.prospect_id > prospects.id
+email_sequences.trigger_stage_id > pipeline_stages.id
+email_sequences.created_by > users.id
+email_sequence_steps.sequence_id > email_sequences.id
+email_send_logs.prospect_id > prospects.id
+email_send_logs.sequence_step_id > email_sequence_steps.id
+social_media_accounts.client_id > clients.id
+social_media_accounts.platform_id > platforms.id
+social_posts.project_id > projects.id
+social_posts.content_item_id > content_items.id
+social_posts.social_media_account_id > social_media_accounts.id
+social_posts.platform_id > platforms.id
+social_posts.content_type_id > content_types.id
+social_posts.created_by > users.id
+
+digital_assets.client_id > clients.id
+digital_assets.project_id > projects.id
+digital_assets.uploaded_by > users.id
+sop_documents.department_id > departments.id
+sop_documents.created_by > users.id
+sop_documents.updated_by > users.id
+sop_versions.document_id > sop_documents.id
+sop_versions.created_by > users.id
+sop_read_logs.document_id > sop_documents.id
+sop_read_logs.user_id > users.id
+
+work_shifts.user_id > users.id
+attendance_records.user_id > users.id
+attendance_records.shift_id > work_shifts.id
+attendance_records.override_by > users.id
+leave_requests.user_id > users.id
+leave_requests.leave_type_id > leave_types.id
+leave_requests.manager_id > users.id
+leave_requests.hr_user_id > users.id
+leave_balances.user_id > users.id
+leave_balances.leave_type_id > leave_types.id
+performance_reviews.user_id > users.id
+performance_reviews.reviewer_id > users.id
+okr_objectives.user_id > users.id
+okr_objectives.review_id > performance_reviews.id
+okr_key_results.objective_id > okr_objectives.id
+competency_ratings.review_id > performance_reviews.id
+kpi_sdm_snapshots.department_id > departments.id
+procurement_requests.requested_by > users.id
+procurement_requests.manager_approved_by > users.id
+procurement_requests.coo_approved_by > users.id
+procurement_requests.director_approved_by > users.id
+procurement_requests.expense_id > expense_records.id
+procurement_requests.asset_id > asset_registers.id
+asset_registers.assigned_to > users.id
+
+notifications.user_id > users.id
+notification_email_logs.notification_id > notifications.id
+notification_email_logs.template_id > document_templates.id
+notification_wa_logs.notification_id > notifications.id
+notification_preferences.user_id > users.id
