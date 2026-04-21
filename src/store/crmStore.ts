@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
 
 export type LeadStage = 'new_lead' | 'contacted' | 'meeting' | 'proposal_sent' | 'negotiation' | 'won' | 'lost';
 
@@ -30,29 +31,143 @@ export interface Campaign {
 interface CrmState {
   prospects: Prospect[];
   campaigns: Campaign[];
-  updateProspectStage: (id: string, stage: LeadStage) => void;
+  isLoading: boolean;
+  error: string | null;
+  fetchProspects: () => Promise<void>;
+  addProspect: (prospect: Omit<Prospect, 'id' | 'stage' | 'score'>) => Promise<void>;
+  updateProspectStage: (id: string, stage: LeadStage) => Promise<void>;
   updateProspectOrder: (reordered: Prospect[]) => void;
+  // TODO: add fetchCampaigns etc later
 }
 
-const mockProspects: Prospect[] = [
-  { id: 'lead-1', name: 'Jonathan Doe', company: 'Prime Solutions', industry: 'Logistics', email: 'jon@prime.co', phone: '0812345678', source: 'LinkedIn Ads', dealValue: 85000000, stage: 'negotiation', score: 85 },
-  { id: 'lead-2', name: 'Alisa Wang', company: 'Bright Interiors', industry: 'Real Estate', email: 'alisa@bright.id', phone: '0819999888', source: 'Organic Search', dealValue: 40000000, stage: 'proposal_sent', score: 65 },
-  { id: 'lead-3', name: 'Bimo Arya', company: 'F&B Corp', industry: 'Food & Beverage', email: 'bimo@fbcorp.co', phone: '0812300001', source: 'Referral', dealValue: 120000000, stage: 'meeting', score: 92 },
-  { id: 'lead-4', name: 'Sarah Ken', company: 'TechNova', industry: 'SaaS', email: 's.ken@technova.io', phone: '0811111222', source: 'Instagram Ads', dealValue: 15000000, stage: 'new_lead', score: 30 },
-  { id: 'lead-5', name: 'Dani Pratama', company: 'EduCenter', industry: 'Education', email: 'dani@educenter.id', phone: '0813333444', source: 'Event Marketing', dealValue: 55000000, stage: 'won', score: 100 },
-];
+export const useCrmStore = create<CrmState>((set, get) => ({
+  prospects: [],
+  campaigns: [],
+  isLoading: false,
+  error: null,
 
-const mockCampaigns: Campaign[] = [
-  { id: 'camp-1', name: 'Q3 B2B LinkedIn Lead Gen', platform: 'LinkedIn', budget: 15000000, spend: 12500000, startDate: new Date('2026-07-01'), endDate: new Date('2026-09-30'), leadsGenerated: 45, dealsWon: 5 },
-  { id: 'camp-2', name: 'Instagram Retargeting Summer', platform: 'Instagram', budget: 8000000, spend: 8000000, startDate: new Date('2026-06-01'), endDate: new Date('2026-08-31'), leadsGenerated: 120, dealsWon: 12 },
-];
+  fetchProspects: async () => {
+    set({ isLoading: true, error: null });
+    // Fetch prospects and join with pipeline_stages to get the stage name
+    const { data, error } = await supabase
+      .from('prospects')
+      .select('*, pipeline_stages(name)')
+      .order('created_at', { ascending: false });
 
-export const useCrmStore = create<CrmState>((set) => ({
-  prospects: mockProspects,
-  campaigns: mockCampaigns,
-  updateProspectStage: (id, stage) => set(state => ({
-    prospects: state.prospects.map(p => p.id === id ? { ...p, stage } : p)
-  })),
+    if (error) {
+      set({ error: error.message, isLoading: false });
+      return;
+    }
+
+    const mappedProspects: Prospect[] = data.map((p: any) => ({
+      id: p.id.toString(),
+      name: p.contact_name,
+      company: p.company_name || '-',
+      industry: p.industry || '-',
+      email: p.email || '-',
+      phone: p.phone || '-',
+      source: p.lead_source || '-',
+      dealValue: Number(p.deal_value || 0),
+      stage: (p.pipeline_stages?.name || 'new_lead') as LeadStage,
+      score: p.lead_score || 0
+    }));
+
+    set({ prospects: mappedProspects, isLoading: false });
+  },
+
+  addProspect: async (prospect) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      // Default stage is 'new_lead' = 1
+      const { data: stageData } = await supabase
+        .from('pipeline_stages')
+        .select('id')
+        .eq('name', 'new_lead')
+        .single();
+
+      const stageId = stageData?.id || 1;
+
+      const newRow = {
+        contact_name: prospect.name,
+        company_name: prospect.company,
+        industry: prospect.industry,
+        email: prospect.email,
+        phone: prospect.phone,
+        lead_source: prospect.source,
+        deal_value: prospect.dealValue,
+        stage_id: stageId,
+        lead_score: 30 // default initial score
+      };
+
+      const { data, error } = await supabase
+        .from('prospects')
+        .insert([newRow])
+        .select('*, pipeline_stages(name)')
+        .single();
+
+      if (error) {
+        console.error("Supabase Error:", error);
+        alert('Supabase Error: ' + error.message);
+        set({ error: error.message, isLoading: false });
+        return;
+      }
+
+      const newProspect: Prospect = {
+        id: data.id.toString(),
+        name: data.contact_name,
+        company: data.company_name || '-',
+        industry: data.industry || '-',
+        email: data.email || '-',
+        phone: data.phone || '-',
+        source: data.lead_source || '-',
+        dealValue: Number(data.deal_value || 0),
+        stage: (data.pipeline_stages?.name || 'new_lead') as LeadStage,
+        score: data.lead_score || 0
+      };
+
+      set(state => ({
+        prospects: [newProspect, ...state.prospects],
+        isLoading: false
+      }));
+    } catch (err: any) {
+      console.error("Unhandled Error:", err);
+      alert('Application Error: ' + err.message);
+      set({ error: err.message, isLoading: false });
+    }
+  },
+
+  updateProspectStage: async (id, stage) => {
+    const originalProspects = get().prospects;
+    
+    // Optimistic UI Update
+    set(state => ({
+      prospects: state.prospects.map(p => p.id === id ? { ...p, stage } : p)
+    }));
+
+    // First, find the stage_id for the given stage name
+    const { data: stageData, error: stageError } = await supabase
+      .from('pipeline_stages')
+      .select('id')
+      .eq('name', stage)
+      .single();
+
+    if (stageError) {
+      set({ error: stageError.message, prospects: originalProspects });
+      return;
+    }
+
+    // Now update the prospect
+    const { error: updateError } = await supabase
+      .from('prospects')
+      .update({ stage_id: stageData.id })
+      .eq('id', parseInt(id));
+
+    if (updateError) {
+      set({ error: updateError.message, prospects: originalProspects });
+    }
+  },
+
   updateProspectOrder: (reordered) => set({
     prospects: reordered
   })

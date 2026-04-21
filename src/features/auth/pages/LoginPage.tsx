@@ -1,41 +1,64 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore, type Role, type User } from '../../../store/authStore';
+import { supabase } from '../../../lib/supabase';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
+import { TriangleAlert } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
-  const login = useAuthStore(state => state.login);
   const navigate = useNavigate();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<Role>('super_admin');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMsg('');
     
-    // Simulate Supabase Auth network request
-    setTimeout(() => {
-      const mockUser: User = {
-        id: 'user-123',
-        email: email || 'demo@classyvisual.com',
-        name: 'Demo User',
-        role: selectedRole,
-      };
-      
-      login(mockUser);
+    // Supabase Auth Login
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (authError) {
+      setErrorMsg(authError.message);
+      setIsLoading(false);
+      return;
+    }
+
+    if (authData.user) {
+      const { data: userRow, error: dbError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .single();
+        
+      if (dbError) {
+        setErrorMsg(`Gagal memuat profil: ${dbError.message} (Mungkin belum Insert ke public.users atau RLS)`);
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('roles(name)')
+        .eq('user_id', userRow.id);
+        
+      const roles = userRoles as unknown as { roles: { name: string } }[];
+      const role = roles && roles.length > 0 ? roles[0].roles.name : null;
+
       setIsLoading(false);
       
-      // Redirect logic based on Role
-      if (selectedRole === 'client') navigate('/dashboard/client');
-      else if (selectedRole === 'cfo' || selectedRole === 'finance_staff') navigate('/dashboard/finance');
-      else if (selectedRole === 'cmo' || selectedRole === 'marketing_staff') navigate('/dashboard/crm');
+      if (role === 'client') navigate('/dashboard/client');
+      else if (role === 'cfo' || role === 'finance_staff') navigate('/dashboard/finance');
+      else if (role === 'cmo' || role === 'marketing_staff') navigate('/dashboard/marketing');
+      else if (role === 'coo') navigate('/dashboard/coo');
       else navigate('/dashboard');
-      
-    }, 1000);
+    }
   };
 
   return (
@@ -55,6 +78,13 @@ export const LoginPage: React.FC = () => {
 
         <div className="glass-panel p-6 sm:p-8">
           <form onSubmit={handleLogin} className="space-y-5">
+            {errorMsg && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3 text-red-400 text-sm">
+                <TriangleAlert className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+            
             <Input 
               label="Email Address" 
               placeholder="name@classyvisual.com" 
@@ -71,31 +101,8 @@ export const LoginPage: React.FC = () => {
               onChange={e => setPassword(e.target.value)}
               required
             />
-            
-            <div className="space-y-1.5 pt-2">
-              <label className="block text-sm font-medium text-zinc-300">
-                Mock Login Role
-              </label>
-              <div className="relative">
-                <select 
-                  className="w-full bg-surface-hover border border-border rounded-lg px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all appearance-none cursor-pointer"
-                  value={selectedRole || ''}
-                  onChange={e => setSelectedRole(e.target.value as Role)}
-                >
-                  <option value="super_admin">Super Admin / Director</option>
-                  <option value="cfo">CFO / Finance Manager</option>
-                  <option value="cmo">CMO / Marketing Manager</option>
-                  <option value="project_manager">Project Manager</option>
-                  <option value="creator">Content Creator</option>
-                  <option value="client">Client</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-zinc-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                </div>
-              </div>
-            </div>
 
-            <Button type="submit" className="w-full mt-6 py-2.5" isLoading={isLoading}>
+            <Button type="submit" className="w-full mt-6 py-2.5 shadow-brand-500/20" isLoading={isLoading}>
               Sign In
             </Button>
           </form>

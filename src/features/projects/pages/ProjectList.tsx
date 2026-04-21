@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '../../../store/projectStore';
 import { Search, Plus, Filter, Briefcase, Calendar, MoreVertical } from 'lucide-react';
@@ -8,14 +8,39 @@ import { cn } from '../../../lib/utils';
 import { useClientStore } from '../../../store/clientStore';
 
 export const ProjectList: React.FC = () => {
-  const projects = useProjectStore(s => s.projects);
-  const clients = useClientStore(s => s.clients);
+  const { projects, isLoading, fetchProjects, addProject } = useProjectStore();
+  const { clients, fetchClients } = useClientStore();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newProject, setNewProject] = useState({
+    name: '',
+    type: '',
+    clientId: '',
+    status: 'active' as const,
+    startDate: new Date(),
+    endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+    pmId: '',
+  });
+
+  useEffect(() => {
+    fetchProjects();
+    fetchClients();
+  }, [fetchProjects, fetchClients]);
+
+  const handleAddProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await addProject(newProject);
+    setIsModalOpen(false);
+    setNewProject({
+      name: '', type: '', clientId: '', status: 'active', 
+      startDate: new Date(), endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), pmId: ''
+    });
+  };
 
   const filteredProjects = projects.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const getClientName = (id: string) => clients.find(c => c.id === id)?.name || 'Unknown Client';
+  const getClientName = (id: string) => clients.find(c => c.id === id)?.name || 'No Client';
 
   return (
     <div className="space-y-6">
@@ -24,7 +49,7 @@ export const ProjectList: React.FC = () => {
           <h1 className="text-2xl font-bold text-white tracking-tight">Projects</h1>
           <p className="text-zinc-400 mt-1">Manage active projects and monitor progress.</p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" onClick={() => setIsModalOpen(true)}>
           <Plus className="w-4 h-4" />
           Create Project
         </Button>
@@ -47,6 +72,14 @@ export const ProjectList: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {filteredProjects.length === 0 && !isLoading && (
+        <div className="glass-panel p-12 text-center border-t border-t-white/5">
+          <Briefcase className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-zinc-300">No projects yet</h3>
+          <p className="text-zinc-500 mt-2 text-sm">Click "Create Project" to start your first project.</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProjects.map(project => (
@@ -101,6 +134,69 @@ export const ProjectList: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Create Project Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-surface border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-white/5">
+              <h2 className="text-xl font-bold text-white">Create New Project</h2>
+            </div>
+            <form onSubmit={handleAddProject} className="p-6 space-y-4">
+              <Input 
+                label="Project Name" 
+                required 
+                value={newProject.name} 
+                onChange={e => setNewProject({...newProject, name: e.target.value})} 
+              />
+              <Input 
+                label="Project Type" 
+                value={newProject.type} 
+                onChange={e => setNewProject({...newProject, type: e.target.value})}
+                placeholder="e.g. Social Media, Product Launch" 
+              />
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-1.5">Client</label>
+                <select 
+                  className="w-full px-4 py-2.5 rounded-xl bg-surface border border-white/10 text-zinc-100 text-sm focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30"
+                  value={newProject.clientId}
+                  onChange={e => setNewProject({...newProject, clientId: e.target.value})}
+                >
+                  <option value="">No Client</option>
+                  {clients.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-1.5">Start Date</label>
+                  <input 
+                    type="date"
+                    className="w-full px-4 py-2.5 rounded-xl bg-surface border border-white/10 text-zinc-100 text-sm focus:outline-none focus:border-brand-500/50"
+                    value={newProject.startDate.toISOString().split('T')[0]}
+                    onChange={e => setNewProject({...newProject, startDate: new Date(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-1.5">End Date</label>
+                  <input 
+                    type="date"
+                    className="w-full px-4 py-2.5 rounded-xl bg-surface border border-white/10 text-zinc-100 text-sm focus:outline-none focus:border-brand-500/50"
+                    value={newProject.endDate.toISOString().split('T')[0]}
+                    onChange={e => setNewProject({...newProject, endDate: new Date(e.target.value)})}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-white/5">
+                <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                <Button type="submit" isLoading={isLoading}>Create Project</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

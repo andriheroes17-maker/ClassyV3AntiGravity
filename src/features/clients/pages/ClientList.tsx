@@ -1,14 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useClientStore } from '../../../store/clientStore';
-import { Search, Plus, Filter, MoreVertical, Building2 } from 'lucide-react';
+import { Search, Plus, Filter, MoreVertical, Building2, Loader2 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { useNavigate } from 'react-router-dom';
 
 export const ClientList: React.FC = () => {
-  const clients = useClientStore(s => s.clients);
+  const { clients, isLoading, fetchClients, addClient } = useClientStore();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newClient, setNewClient] = useState({
+    name: '', industry: '', picName: '', picEmail: '', picPhone: '', status: 'active' as const, contractEnd: new Date()
+  });
+
+  const handleAddClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await addClient(newClient);
+    setIsModalOpen(false);
+    setNewClient({ name: '', industry: '', picName: '', picEmail: '', picPhone: '', status: 'active', contractEnd: new Date() });
+  };
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
   const filteredClients = clients.filter(c => 
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -22,7 +37,7 @@ export const ClientList: React.FC = () => {
           <h1 className="text-2xl font-bold text-white tracking-tight">Clients</h1>
           <p className="text-zinc-400 mt-1">Manage your agency's clients and relationships.</p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" onClick={() => setIsModalOpen(true)}>
           <Plus className="w-4 h-4" />
           Add Client
         </Button>
@@ -112,6 +127,55 @@ export const ClientList: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Add Client Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-surface border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-white/5">
+              <h2 className="text-xl font-bold text-white">Add New Client</h2>
+            </div>
+            <form onSubmit={handleAddClient} className="p-6 space-y-4">
+              <Input 
+                label="Company Name" 
+                required 
+                value={newClient.name} 
+                onChange={e => setNewClient({...newClient, name: e.target.value})} 
+              />
+              <Input 
+                label="Industry" 
+                value={newClient.industry} 
+                onChange={e => setNewClient({...newClient, industry: e.target.value})} 
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <Input 
+                  label="PIC Name" 
+                  required 
+                  value={newClient.picName} 
+                  onChange={e => setNewClient({...newClient, picName: e.target.value})} 
+                />
+                <Input 
+                  label="PIC Phone" 
+                  value={newClient.picPhone} 
+                  onChange={e => setNewClient({...newClient, picPhone: e.target.value})} 
+                />
+              </div>
+              <Input 
+                label="PIC Email" 
+                type="email" 
+                required 
+                value={newClient.picEmail} 
+                onChange={e => setNewClient({...newClient, picEmail: e.target.value})} 
+              />
+              
+              <div className="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-white/5">
+                <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                <Button type="submit" isLoading={isLoading}>Save Client</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

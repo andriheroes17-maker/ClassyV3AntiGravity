@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCrmStore } from '../../../store/crmStore';
-import { Search, Plus, Filter, MoreVertical, Building2, Flame, Snowflake, ThermometerSun } from 'lucide-react';
+import { Search, Plus, Filter, MoreVertical, Building2, Flame, Snowflake, ThermometerSun, Loader2 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 
 export const ProspectList: React.FC = () => {
-  const prospects = useCrmStore(s => s.prospects);
+  const { prospects, isLoading, fetchProspects, addProspect } = useCrmStore();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newProspect, setNewProspect] = useState({
+    name: '', company: '', industry: '', email: '', phone: '', source: '', dealValue: 0
+  });
+
+  const handleAddProspect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await addProspect(newProspect);
+    setIsModalOpen(false);
+    setNewProspect({ name: '', company: '', industry: '', email: '', phone: '', source: '', dealValue: 0 });
+  };
+
+  useEffect(() => {
+    fetchProspects();
+  }, [fetchProspects]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -27,7 +42,7 @@ export const ProspectList: React.FC = () => {
           <h1 className="text-2xl font-bold text-white tracking-tight">Prospects</h1>
           <p className="text-zinc-400 mt-1">Manage early-stage leads and potential clients.</p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" onClick={() => setIsModalOpen(true)}>
           <Plus className="w-4 h-4" />
           Add Prospect
         </Button>
@@ -112,6 +127,63 @@ export const ProspectList: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Add Prospect Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-surface border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-white/5">
+              <h2 className="text-xl font-bold text-white">Add New Prospect</h2>
+            </div>
+            <form onSubmit={handleAddProspect} className="p-6 space-y-4">
+              <Input 
+                label="Company Name" 
+                required 
+                value={newProspect.company} 
+                onChange={e => setNewProspect({...newProspect, company: e.target.value})} 
+              />
+              <Input 
+                label="Contact Name" 
+                required 
+                value={newProspect.name} 
+                onChange={e => setNewProspect({...newProspect, name: e.target.value})} 
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <Input 
+                  label="Email" 
+                  type="email" 
+                  value={newProspect.email} 
+                  onChange={e => setNewProspect({...newProspect, email: e.target.value})} 
+                />
+                <Input 
+                  label="Phone" 
+                  value={newProspect.phone} 
+                  onChange={e => setNewProspect({...newProspect, phone: e.target.value})} 
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input 
+                  label="Source" 
+                  value={newProspect.source} 
+                  onChange={e => setNewProspect({...newProspect, source: e.target.value})} 
+                  placeholder="e.g. LinkedIn"
+                />
+                <Input 
+                  label="Est. Deal Value" 
+                  type="number" 
+                  value={newProspect.dealValue} 
+                  onChange={e => setNewProspect({...newProspect, dealValue: Number(e.target.value)})} 
+                />
+              </div>
+              
+              <div className="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-white/5">
+                <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                <Button type="submit" isLoading={isLoading}>Save Prospect</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
